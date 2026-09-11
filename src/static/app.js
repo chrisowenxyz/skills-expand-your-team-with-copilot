@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchButton = document.getElementById("search-button");
   const categoryFilters = document.querySelectorAll(".category-filter");
   const dayFilters = document.querySelectorAll(".day-filter");
+  const difficultyFilters = document.querySelectorAll(".difficulty-filter");
   const timeFilters = document.querySelectorAll(".time-filter");
 
   // Authentication elements
@@ -39,6 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentFilter = "all";
   let searchQuery = "";
   let currentDay = "";
+  let currentDifficulty = "all";
   let currentTimeRange = "";
 
   // Authentication state
@@ -377,6 +379,12 @@ document.addEventListener("DOMContentLoaded", () => {
         queryParams.push(`day=${encodeURIComponent(currentDay)}`);
       }
 
+      if (currentDifficulty) {
+        queryParams.push(
+          `difficulty=${encodeURIComponent(currentDifficulty)}`
+        );
+      }
+
       // Handle time range filter
       if (currentTimeRange) {
         const range = timeRanges[currentTimeRange];
@@ -624,6 +632,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Update current day filter and fetch activities
       currentDay = button.dataset.day;
+      fetchActivities();
+    });
+  });
+
+  // Add event listeners to difficulty filter buttons
+  difficultyFilters.forEach((button) => {
+    button.addEventListener("click", () => {
+      difficultyFilters.forEach((btn) => btn.classList.remove("active"));
+      button.classList.add("active");
+
+      currentDifficulty = button.dataset.difficulty;
       fetchActivities();
     });
   });
