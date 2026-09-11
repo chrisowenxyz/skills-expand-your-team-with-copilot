@@ -568,6 +568,31 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <div class="share-container">
+        <button
+          class="share-button"
+          type="button"
+          aria-expanded="false"
+          aria-haspopup="true"
+          aria-label="Share ${name}"
+        >
+          <span aria-hidden="true">📤</span> Share activity
+        </button>
+        <div class="share-menu hidden" role="menu">
+          <button type="button" class="share-option" data-share-type="copy" role="menuitem">
+            Copy link
+          </button>
+          <button type="button" class="share-option" data-share-type="facebook" role="menuitem">
+            Share on Facebook
+          </button>
+          <button type="button" class="share-option" data-share-type="x" role="menuitem">
+            Share on X
+          </button>
+          <button type="button" class="share-option" data-share-type="email" role="menuitem">
+            Share by email
+          </button>
+        </div>
+        </div>
       </div>
     `;
 
@@ -587,8 +612,65 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    const shareButton = activityCard.querySelector(".share-button");
+    const shareMenu = activityCard.querySelector(".share-menu");
+    shareButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isOpen = !shareMenu.classList.contains("hidden");
+      shareMenu.classList.toggle("hidden", isOpen);
+      shareButton.setAttribute("aria-expanded", String(!isOpen));
+    });
+
+    shareMenu.querySelectorAll(".share-option").forEach((option) => {
+      option.addEventListener("click", () => {
+        shareActivity(name, option.dataset.shareType);
+        shareMenu.classList.add("hidden");
+        shareButton.setAttribute("aria-expanded", "false");
+      });
+    });
+
     activitiesList.appendChild(activityCard);
   }
+
+  // Share an activity using a social network or the clipboard.
+  async function shareActivity(activityName, shareType) {
+    const activityUrl = new URL(window.location.href);
+    activityUrl.search = "";
+    activityUrl.searchParams.set("activity", activityName);
+    const shareUrl = activityUrl.toString();
+    const shareText = `Check out ${activityName} at Mergington High School!`;
+
+    if (shareType === "copy") {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        showMessage("Activity link copied to your clipboard.", "success");
+      } catch {
+        showMessage("Unable to copy the link. Please copy it from your browser.", "error");
+      }
+      return;
+    }
+
+    const encodedUrl = encodeURIComponent(shareUrl);
+    const encodedText = encodeURIComponent(shareText);
+    const shareLinks = {
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+      x: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
+      email: `mailto:?subject=${encodedText}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`,
+    };
+
+    if (shareLinks[shareType]) {
+      window.open(shareLinks[shareType], "_blank", "noopener,noreferrer");
+    }
+  }
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".share-container")) {
+      document.querySelectorAll(".share-menu:not(.hidden)").forEach((menu) => {
+        menu.classList.add("hidden");
+        menu.previousElementSibling.setAttribute("aria-expanded", "false");
+      });
+    }
+  });
 
   // Event listeners for search and filter
   searchInput.addEventListener("input", (event) => {
